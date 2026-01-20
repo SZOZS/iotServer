@@ -96,6 +96,8 @@ public:
     const PortProtocolConfigData& getConfigPortProtocol() const { return m_configPortProtocol; }
 
     static std::vector<short> getUniquePortsFromConfig();
+    std::string getUniquePortsFromConfig(short port);
+
     static void logPortProtocolConfig();
     // 获取日志配置
 };
