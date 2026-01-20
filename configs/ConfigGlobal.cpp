@@ -122,10 +122,10 @@ void ConfigGlobal::loadConfig(const std::string& filePath)
                     pp_item.protocol = item["protocol"].get<std::string>();
 
                     // 解析ports字段（转换为short，校验范围）
-                    if (!item.contains("ports") || !item["ports"].is_number_integer()) {
-                        throw std::runtime_error("Config error: ports missing or not integer in " + group_name + " at index " + std::to_string(i));
+                    if (!item.contains("port") || !item["port"].is_number_integer()) {
+                        throw std::runtime_error("Config error: port missing or not integer in " + group_name + " at index " + std::to_string(i));
                     }
-                    int port_val = item["ports"].get<int>();
+                    int port_val = item["port"].get<int>();
                     if (port_val < 0 || port_val > SHRT_MAX) {
                         throw std::out_of_range("Port value " + std::to_string(port_val) + " out of short range in " + group_name + " at index " + std::to_string(i));
                     }

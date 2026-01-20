@@ -25,44 +25,34 @@ void PortProtocolConfig::parsePortProtocolConfig()
 
     try {
         // 1. 从ConfigGlobal读取PortProtocolConfigData（匹配项目实际结构体）
-        const PortProtocolConfigData& config_data = ConfigGlobal::getInstance().getConfigPortProtocol();
+        // const PortProtocolConfigData& config_data = ConfigGlobal::getInstance().getConfigPortProtocol();
+        const ConfigGlobal::PortProtocolConfigData_t& config_data = ConfigGlobal::getInstance().getConfigPortProtocol();
 
         // 2. 解析CoAP大类（核心：遍历protocolGroups["CoAP"]）
         auto coap_it = config_data.protocolGroups.find("CoAP");
         if (coap_it != config_data.protocolGroups.end()) {
-            const std::vector<PortProtocolItem>& coap_items = coap_it->second;
+            // 修复PortProtocolItem未声明：用ConfigGlobal::PortProtocolItem_t
+            const std::vector<ConfigGlobal::PortProtocolItem_t>& coap_items = coap_it->second;
             for (const auto& item : coap_items) {
-                // item.port已是short类型，无需转换（ConfigGlobal已完成JSON→结构体的解析）
-                short port = item.port;
-                std::string sub_proto = item.protocol;
-
-                // 绑定端口→CoAP大类名称（去重：同一端口多次出现也只存一次）
-                _port_to_category[port] = "CoAP";
-                LOG_DEBUG_FMT("端口[%d]绑定协议大类：CoAP（子协议：%s）", port, sub_proto.c_str());
+                _port_to_category[item.port] = "CoAP";  // 端口→CoAP大类映射
             }
         }
 
         // 3. 解析WebSocket大类
         auto ws_it = config_data.protocolGroups.find("WebSocket");
         if (ws_it != config_data.protocolGroups.end()) {
-            const std::vector<PortProtocolItem>& ws_items = ws_it->second;
+            const std::vector<ConfigGlobal::PortProtocolItem_t>& ws_items = ws_it->second;
             for (const auto& item : ws_items) {
-                short port = item.port;
-                std::string sub_proto = item.protocol;
-
-                // 绑定端口→WebSocket大类名称
-                _port_to_category[port] = "WebSocket";
-                LOG_DEBUG_FMT("端口[%d]绑定协议大类：WebSocket（子协议：%s）", port, sub_proto.c_str());
+                _port_to_category[item.port] = "WebSocket";
             }
         }
 
         // 4. 扩展：解析MQTT大类（按需添加）
         auto mqtt_it = config_data.protocolGroups.find("MQTT");
         if (mqtt_it != config_data.protocolGroups.end()) {
-            const std::vector<PortProtocolItem>& mqtt_items = mqtt_it->second;
+            const std::vector<ConfigGlobal::PortProtocolItem_t>& mqtt_items = mqtt_it->second;
             for (const auto& item : mqtt_items) {
                 _port_to_category[item.port] = "MQTT";
-                LOG_DEBUG_FMT("端口[%d]绑定协议大类：MQTT（子协议：%s）", item.port, item.protocol.c_str());
             }
         }
 
@@ -84,7 +74,7 @@ std::unordered_map<short, std::string> PortProtocolConfig::getPortToCategoryMap(
 }
 
 // 对外提供：协议大类→子协议+端口列表映射（补充完整实现）
-std::unordered_map<ProtocolCategory, std::vector<ProtocolPortItem>> PortProtocolConfig::getCategoryToItemsMap()
+std::unordered_map<ProtocolCategory, std::vector<PortProtocolItem>> PortProtocolConfig::getCategoryToItemsMap()
 {
     parsePortProtocolConfig();
 

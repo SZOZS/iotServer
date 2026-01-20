@@ -75,11 +75,15 @@ private:
         short port;            // 端口号（对应JSON中的ports字段）
     };
 
+    // 协议大类配置：匹配JSON中的"port_protocol"根节点
     struct PortProtocolConfigData
     {
-        // key：通信大类（MQTT/CoAP/HTTP/HTTPS/WebSocket等），value：对应子协议列表
+        // ✅ key：协议大类（MQTT/CoAP/WebSocket等），匹配JSON的一级键
+        // ✅ value：子协议列表，匹配JSON中CoAP/WebSocket下的数组
         std::unordered_map<std::string, std::vector<PortProtocolItem>> protocolGroups;
-    } m_configPortProtocol;  // 端口协议配置实例
+    };
+
+    PortProtocolConfigData m_configPortProtocol;
 
 public:
     static ConfigGlobal& getInstance()
@@ -99,6 +103,14 @@ public:
     std::string getUniquePortsFromConfig(short port);
 
     static void logPortProtocolConfig();
+
+    // ========== 新增：公有类型别名（让外部能引用私有结构体） ==========
+    using PortProtocolItem_t = PortProtocolItem;
+    using PortProtocolConfigData_t = PortProtocolConfigData;
+
+    // ========== 新增：公有访问接口（获取私有配置实例） ==========
+    const PortProtocolConfigData_t& getConfigPortProtocol() const { return m_configPortProtocol; }
+
     // 获取日志配置
 };
 
