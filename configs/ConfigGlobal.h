@@ -97,7 +97,6 @@ public:
     const MySQLConfigData& getConfigMySQL() const { return m_configMySQL; }
     const RedisConfigData& getConfigRedis() const { return m_configRedis; }
     const PhpPushConfigData& getConfigPhpPush() const { return m_configPhpPush; }
-    const PortProtocolConfigData& getConfigPortProtocol() const { return m_configPortProtocol; }
 
     static std::vector<short> getUniquePortsFromConfig();
     std::string getUniquePortsFromConfig(short port);

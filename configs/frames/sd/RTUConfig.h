@@ -9,11 +9,12 @@
 #define MAX_RECV_QUEUE 10000  // 最大接收队列大小（10000条），防止消息堆积导致内存溢出
 #define MAX_SEND_QUEUE 1000   // 最大发送队列大小（1000条），限制单个会话的待发送消息数量
 
-enum RTUMsgIds {
-  MSG_SD_RTU_REGISTER = 10001,              // 注册帧
-  MSG_SD_RTU_REGISTER_FEEDBACK = 11001,     // 注册帧-反馈
-  MSG_SD_RTU_REPORT_DATA = 10003,           // 数据帧
-  MSG_SD_RTU_REPORT_DATA_FEEDBACK = 11003,  // 数据帧-反馈
+enum RTUMsgIds
+{
+    MSG_SD_RTU_REGISTER = 10001,              // 注册帧
+    MSG_SD_RTU_REGISTER_FEEDBACK = 11001,     // 注册帧-反馈
+    MSG_SD_RTU_REPORT_DATA = 10003,           // 数据帧
+    MSG_SD_RTU_REPORT_DATA_FEEDBACK = 11003,  // 数据帧-反馈
 };
 
 #define FRAME_SD_RTU_START 0x7B               // 帧起始符（十六进制7B，对应'{'）

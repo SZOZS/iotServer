@@ -1,4 +1,7 @@
 #pragma once
+#ifndef PORT_PROTOCOL_CONFIG_H
+#define PORT_PROTOCOL_CONFIG_H
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -28,6 +31,7 @@ enum class ProtocolCategory
 class PortProtocolConfig
 {
 public:
+    PortProtocolConfig() = default;
     // 获取单例实例
     static PortProtocolConfig& getInstance();
 
@@ -43,19 +47,17 @@ public:
     // 辅助方法：协议大类枚举转名称（如ProtocolCategory::WebSocket→"WebSocket"）
     std::string categoryEnumToName(ProtocolCategory category);
 
-    // 禁用拷贝（单例必备）
+    // 禁用拷贝
     PortProtocolConfig(const PortProtocolConfig&) = delete;
     PortProtocolConfig& operator=(const PortProtocolConfig&) = delete;
 
 private:
-    PortProtocolConfig() = default;  // 私有构造
     void parsePortProtocolConfig();  // 核心解析方法
-    // 禁止拷贝
-    PortProtocolConfig(const PortProtocolConfig&) = delete;
-    PortProtocolConfig& operator=(const PortProtocolConfig&) = delete;
 
     // 缓存解析结果，避免重复IO
     std::unordered_map<short, std::string> _port_to_category;                                // 端口→协议大类名称
     std::unordered_map<ProtocolCategory, std::vector<PortProtocolItem>> _category_to_items;  // 大类→子项列表
     bool _is_parsed = false;                                                                 // 标记是否已解析配置
 };
+
+#endif  // PORT_PROTOCOL_CONFIG_H

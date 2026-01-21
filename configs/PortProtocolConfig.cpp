@@ -13,9 +13,6 @@ PortProtocolConfig& PortProtocolConfig::getInstance()
     return instance;
 }
 
-// 构造函数：空实现，解析逻辑延迟到第一次调用时执行
-PortProtocolConfig::PortProtocolConfig() {}
-
 // 核心：解析Config.json的port_protocol，生成端口→协议大类映射
 void PortProtocolConfig::parsePortProtocolConfig()
 {

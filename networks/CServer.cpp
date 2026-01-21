@@ -94,12 +94,14 @@ void CServer::startAcceptForAcceptor(size_t acceptor_idx)
     if (protocolType == "CoAP") {
         // CoAP协议：绑定IotSession
         std::shared_ptr<IotSession> new_iot_session = std::make_shared<IotSession>(io_context, this);
-        _acceptors[acceptor_idx].async_accept(new_iot_session->getSocket(), std::bind(&CServer::handleIotAccept, this, acceptor_idx, new_iot_session, std::placeholders::_1));
+        _acceptors[acceptor_idx].async_accept(new_iot_session->getSocket(),
+                                              std::bind(&CServer::handleIotAccept, this, acceptor_idx, new_iot_session, std::placeholders::_1));
         LOG_DEBUG_FMT("端口[%d]（acceptor_idx[%zu]）绑定CoAP协议，创建IotSession", port, acceptor_idx);
     } else if (protocolType == "WebSocket") {
         // WebSocket协议：绑定WebSession
         std::shared_ptr<WebSession> new_web_session = std::make_shared<WebSession>(io_context, this);
-        _acceptors[acceptor_idx].async_accept(new_web_session->getSocket(), std::bind(&CServer::handleWebAccept, this, acceptor_idx, new_web_session, std::placeholders::_1));
+        _acceptors[acceptor_idx].async_accept(new_web_session->getSocket(),
+                                              std::bind(&CServer::handleWebAccept, this, acceptor_idx, new_web_session, std::placeholders::_1));
         LOG_DEBUG_FMT("端口[%d]（acceptor_idx[%zu]）绑定WebSocket协议，创建WebSession", port, acceptor_idx);
     } else {
         // 容错：未知协议/未配置端口，打印日志并延迟重试

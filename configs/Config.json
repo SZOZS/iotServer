@@ -7,11 +7,11 @@
         "file_path": "logs/app.log"
     },
     "mysql": {
-        "host": "",
-        "user": "",
-        "password": "",
-        "database": "",
-        "port": 3306,
+        "host": "127.0.0.1",
+        "user": "root",
+        "password": "mysql8.0.43_password",
+        "database": "haoyun",
+        "port": 3307,
         "timeout": 60,
         "soft_delete": true,
         "max_retries": 3,
@@ -21,9 +21,9 @@
         "max_idle_time": 180
     },
     "redis": {
-        "host": "",
+        "host": "127.0.0.1",
         "port": 6379,
-        "password": "",
+        "password": "redis8.2_password",
         "db": 0,
         "timeout": 60,
         "max_retries": 3,

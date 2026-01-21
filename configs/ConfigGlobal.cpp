@@ -127,7 +127,8 @@ void ConfigGlobal::loadConfig(const std::string& filePath)
                     }
                     int port_val = item["port"].get<int>();
                     if (port_val < 0 || port_val > SHRT_MAX) {
-                        throw std::out_of_range("Port value " + std::to_string(port_val) + " out of short range in " + group_name + " at index " + std::to_string(i));
+                        throw std::out_of_range("Port value " + std::to_string(port_val) + " out of short range in " + group_name + " at index " +
+                                                std::to_string(i));
                     }
                     pp_item.port = static_cast<short>(port_val);
 
