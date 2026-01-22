@@ -3,14 +3,19 @@
 
 #include "Logger.h"
 
-Logger::Logger()
-    : m_logger_logLevel(LogLevel::DEBUG)
-    ,                                       // 默认日志级别为DEBUG
-    m_logger_logTarget(LogTarget::CONSOLE)  // 默认只输出到控制台
+// 单例实例获取
+Logger& Logger::getInstance()
+{
+    static Logger instance;
+    return instance;
+}
+
+// 构造函数：默认日志级别为DEBUG，默认只输出到控制台
+Logger::Logger() : m_logger_logLevel(LogLevel::DEBUG), m_logger_logTarget(LogTarget::CONSOLE)
 {
     // 初始化时不打开日志文件，等待用户设置
 }
-
+// 析构函数
 Logger::~Logger()
 {
     if (m_logger_logFile.is_open())
@@ -77,7 +82,7 @@ std::string Logger::levelToString(LogLevel level)
     }
 }
 
-// 核心修改：根据传入的 LogLevel level 显示对应颜色
+// 根据传入的 LogLevel level 显示对应颜色
 void Logger::logToConsole(const std::string& logMessage, LogLevel level)
 {
     // 不同级别对应不同 ANSI 颜色码
@@ -112,7 +117,7 @@ void Logger::logToFile(const std::string& logMessage)
     }
 }
 
-// 第三步：修改 log 函数中调用 logToConsole 的地方，传入当前日志级别
+// 修改 log 函数中调用 logToConsole 的地方，传入当前日志级别
 void Logger::log(LogLevel level, const std::string& message, const std::string& file, int line)
 {
     if (level < m_logger_logLevel)
@@ -134,7 +139,7 @@ void Logger::log(LogLevel level, const std::string& message, const std::string& 
 
     // 控制台输出（添加颜色控制）
     if (m_logger_logTarget == LogTarget::CONSOLE || m_logger_logTarget == LogTarget::BOTH) {
-        logToConsole(logMessage, level);  // 新增 level 参数
+        logToConsole(logMessage, level);
     }
 
     // 文件输出（纯文本，无颜色）
@@ -147,23 +152,45 @@ void Logger::debug(const std::string& message, const std::string& file, int line
 {
     log(LogLevel::DEBUG, message, file, line);
 }
-
 void Logger::info(const std::string& message, const std::string& file, int line)
 {
     log(LogLevel::INFO, message, file, line);
 }
-
 void Logger::warning(const std::string& message, const std::string& file, int line)
 {
     log(LogLevel::WARNING, message, file, line);
 }
-
 void Logger::error(const std::string& message, const std::string& file, int line)
 {
     log(LogLevel::ERROR, message, file, line);
 }
-
 void Logger::fatal(const std::string& message, const std::string& file, int line)
 {
     log(LogLevel::FATAL, message, file, line);
+}
+
+void Logger::debugDelay(const std::string& message, const std::string& file, int line)
+{
+    debug(message, file, line);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+void Logger::infoDelay(const std::string& message, const std::string& file, int line)
+{
+    info(message, file, line);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+void Logger::warningDelay(const std::string& message, const std::string& file, int line)
+{
+    warning(message, file, line);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+void Logger::errorDelay(const std::string& message, const std::string& file, int line)
+{
+    error(message, file, line);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+void Logger::fatalDelay(const std::string& message, const std::string& file, int line)
+{
+    fatal(message, file, line);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }

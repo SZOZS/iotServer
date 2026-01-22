@@ -8,14 +8,14 @@
 void ConfigGlobal::loadConfig(const std::string& filePath)
 {
     try {
-        LOG_DEBUG("[config] ==> loding ...");
+        LOG_DEBUG_DELAY("[config] ==> loding ...");
         std::ifstream ifs(filePath);
         if (!ifs.is_open()) {
-            LOG_ERROR_FMT("配置文件 %s 打开失败 %s", filePath.c_str(), strerror(errno));
+            LOG_ERROR_FMT_DELAY("配置文件 %s 打开失败 %s", filePath.c_str(), strerror(errno));
             return;
         }
         if (ifs.peek() == std::ifstream::traits_type::eof()) {
-            LOG_ERROR_FMT("配置文件 %s 是空的", filePath.c_str());
+            LOG_ERROR_FMT_DELAY("配置文件 %s 是空的", filePath.c_str());
             return;
         }
 
@@ -24,28 +24,28 @@ void ConfigGlobal::loadConfig(const std::string& filePath)
 
         // 解析Hex配置
         if (j.contains("hex")) {
-            LOG_DEBUG("[hex] ==> loding ...");
+            LOG_DEBUG_DELAY("[hex] ==> loding ...");
             auto& hex = j["hex"];
             m_configHex.hexUppercase = hex["uppercase"];   // 使用大写
             m_configHex.hexWithSpace = hex["with_space"];  // 使用空格
-            LOG_DEBUG("[hex] √ ");
+            LOG_DEBUG_DELAY("[hex] √ ");
         } else {
-            LOG_ERROR_FMT("[ERROR]==>%s-hex", filePath.c_str());
+            LOG_ERROR_FMT_DELAY("[ERROR]==>%s-hex", filePath.c_str());
         }
 
         // 解析日志配置
         if (j.contains("log")) {
-            LOG_DEBUG("[log] ==> loding ...");
+            LOG_DEBUG_DELAY("[log] ==> loding ...");
             auto& log = j["log"];
             m_configLog.filePath = log["file_path"];  // 读取日志文件路径
-            LOG_DEBUG("[log] √ ");
+            LOG_DEBUG_DELAY("[log] √ ");
         } else {
-            LOG_ERROR_FMT("[FAIL]==>%s-log (use default: app.log)", filePath.c_str());
+            LOG_ERROR_FMT_DELAY("[FAIL]==>%s-log (use default: app.log)", filePath.c_str());
         }
 
         // 解析MySQL配置
         if (j.contains("mysql")) {
-            LOG_DEBUG("[mysql] ==> loding ...");
+            LOG_DEBUG_DELAY("[mysql] ==> loding ...");
             auto& mysql = j["mysql"];
             m_configMySQL.host = mysql["host"];                                      // 连接地址
             m_configMySQL.user = mysql["user"];                                      // 账号
@@ -59,15 +59,15 @@ void ConfigGlobal::loadConfig(const std::string& filePath)
             m_configMySQL.maxConnections = mysql["max_connections"];                 // 最大连接数阈值
             m_configMySQL.connectionMaxLifetime = mysql["connection_max_lifetime"];  // 连接最大存活时间（秒），超过则视为超时
             m_configMySQL.maxIdleTime = mysql["max_idle_time"];                      // 最大空闲时间（默认300秒）
-            LOG_DEBUG("[mysql] √ ");
+            LOG_DEBUG_DELAY("[mysql] √ ");
         } else {
-            LOG_ERROR_FMT("[FAIL]==>%s-mysql", filePath.c_str());
+            LOG_ERROR_FMT_DELAY("[FAIL]==>%s-mysql", filePath.c_str());
         }
 
         // 解析Redis配置
         if (j.contains("redis")) {
             auto& redis = j["redis"];
-            LOG_DEBUG("[redis] ==> loding ...");
+            LOG_DEBUG_DELAY("[redis] ==> loding ...");
             m_configRedis.host = redis["host"];                                      // 连接地址
             m_configRedis.port = redis["port"];                                      // 端口
             m_configRedis.password = redis["password"];                              // 密码
@@ -78,25 +78,25 @@ void ConfigGlobal::loadConfig(const std::string& filePath)
             m_configRedis.maxConnections = redis["max_connections"];                 // 最大连接数阈值
             m_configRedis.connectionMaxLifetime = redis["connection_max_lifetime"];  // 连接最大存活时间（秒），超过则视为超时
             m_configRedis.maxIdleTime = redis["max_idle_time"];                      // 最大空闲时间（默认300秒）
-            LOG_DEBUG("[redis] √ ");
+            LOG_DEBUG_DELAY("[redis] √ ");
         } else {
-            LOG_ERROR_FMT("[FAIL]==>%s-redis", filePath.c_str());
+            LOG_ERROR_FMT_DELAY("[FAIL]==>%s-redis", filePath.c_str());
         }
 
         // 解析PHP Push IP白名单配置
         if (j.contains("php_push")) {
-            LOG_DEBUG("[php_push] ==> loding ...");
+            LOG_DEBUG_DELAY("[php_push] ==> loding ...");
             auto& php_push = j["php_push"];
             for (const auto& ip : php_push["ip_whitelist"]) {
                 m_configPhpPush.ip_whitelist.insert(ip.get<std::string>());
             }
-            LOG_DEBUG("[php_push] √ ");
+            LOG_DEBUG_DELAY("[php_push] √ ");
         } else {
-            LOG_ERROR_FMT("[FAIL]==>%s-php_push", filePath.c_str());
+            LOG_ERROR_FMT_DELAY("[FAIL]==>%s-php_push", filePath.c_str());
         }
 
         if (j.contains("port_protocol") && j["port_protocol"].is_object()) {
-            LOG_DEBUG("[port_protocol] ==> loding ...");
+            LOG_DEBUG_DELAY("[port_protocol] ==> loding ...");
             const json& port_protocol_obj = j["port_protocol"];
 
             // 遍历所有通信大类（MQTT/CoAP/HTTP/HTTPS/WebSocket等）
@@ -138,11 +138,11 @@ void ConfigGlobal::loadConfig(const std::string& filePath)
                 // 将当前大类的子协议列表存入配置
                 m_configPortProtocol.protocolGroups[group_name] = group_items;
             }
-            LOG_DEBUG("[port_protocol] √ ");
+            LOG_DEBUG_DELAY("[port_protocol] √ ");
         }
-        LOG_DEBUG("[config] √ ");
+        LOG_DEBUG_DELAY("[config] √ ");
     } catch (const std::exception& e) {
-        LOG_ERROR_FMT("[ERROR]==>%s：%s", filePath.c_str(), e.what());
+        LOG_ERROR_FMT_DELAY("[ERROR]==>%s：%s", filePath.c_str(), e.what());
     }
 }
 
@@ -204,7 +204,7 @@ void ConfigGlobal::logPortProtocolConfig()
     auto coapIt = portProtocolConfig.protocolGroups.find("CoAP");
     if (coapIt != portProtocolConfig.protocolGroups.end()) {
         const auto& coapItems = coapIt->second;  // 通过迭代器获取值
-        LOG_DEBUG("=== CoAP 协议配置 ===");
+        LOG_DEBUG_DELAY("=== CoAP 协议配置 ===");
         for (const auto& item : coapItems) {
             LOG_DEBUG_FMT(":%hd => %s", item.port, item.protocol.c_str());
         }
@@ -214,14 +214,14 @@ void ConfigGlobal::logPortProtocolConfig()
     auto wsIt = portProtocolConfig.protocolGroups.find("WebSocket");
     if (wsIt != portProtocolConfig.protocolGroups.end()) {
         const auto& wsItems = wsIt->second;
-        LOG_DEBUG("=== WebSocket 协议配置 ===");
+        LOG_DEBUG_DELAY("=== WebSocket 协议配置 ===");
         for (const auto& item : wsItems) {
             LOG_DEBUG_FMT(":%hd => %s", item.port, item.protocol.c_str());
         }
     }
 
     // 3. 遍历所有通信大类（C++14兼容，无结构化绑定）
-    LOG_DEBUG("=== 所有通信大类配置 ===");
+    LOG_DEBUG_DELAY("=== 所有通信大类配置 ===");
     for (const auto& group_pair : portProtocolConfig.protocolGroups) {
         const std::string& groupName = group_pair.first;
         const std::vector<PortProtocolItem>& items = group_pair.second;

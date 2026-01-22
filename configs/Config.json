@@ -38,7 +38,6 @@
         ]
     },
     "port_protocol": {
-        "MQTT": [],
         "CoAP": [
             {
                 "protocol": "SD_RTU",
@@ -65,15 +64,11 @@
                 "port": 8236
             }
         ],
-        "HTTP/HTTPS": [],
         "WebSocket": [
             {
                 "protocol": "WEB_SOCKET",
                 "port": 8235
             }
-        ],
-        "MQTT-SN": [],
-        "LwM2M": [],
-        "AMQP": []
+        ]
     }
 }

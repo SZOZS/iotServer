@@ -27,16 +27,16 @@ class LogicSystem;
 class IotSession : public std::enable_shared_from_this<IotSession>
 {
 public:
-    IotSession(boost::asio::io_context& io_context, CServer* server);  // 构造函数：初始化会话
-    ~IotSession();                                                     // 析构函数：释放会话资源
-    boost::asio::ip::tcp::socket& getSocket();                         // 获取会话的socket（供服务器accept使用）
-    std::string& getUuid();                                            // 获取会话的唯一标识（UUID）
-    void start();                                                      // 启动会话（开始异步读取客户端数据）
-    void send(char* msg, short max_length, int msgid);                 // 发送消息（字符串版本）
-    void send(std::string msg, int msgid);                             // 发送消息（字符数组版本）
-    void close();                                                      // 关闭会话（关闭socket并标记状态）
-    std::shared_ptr<IotSession> sharedSelf();                          // 获取当前会话的shared_ptr（用于异步回调中延长生命周期）
-    std::string getCurrentTime();                                      // 格式化时间
+    IotSession(boost::asio::io_context& io_context, CServer* server, short port, const std::string& mainProtocol = "CoAP");  // 构造函数：初始化会话
+    ~IotSession();                                                                                                           // 析构函数：释放会话资源
+    boost::asio::ip::tcp::socket& getSocket();          // 获取会话的socket（供服务器accept使用）
+    std::string& getUuid();                             // 获取会话的唯一标识（UUID）
+    void start();                                       // 启动会话（开始异步读取客户端数据）
+    void send(char* msg, short max_length, int msgid);  // 发送消息（字符串版本）
+    void send(std::string msg, int msgid);              // 发送消息（字符数组版本）
+    void close();                                       // 关闭会话（关闭socket并标记状态）
+    std::shared_ptr<IotSession> sharedSelf();           // 获取当前会话的shared_ptr（用于异步回调中延长生命周期）
+    std::string getCurrentTime();                       // 格式化时间
     void startRead();
 
 private:
@@ -58,6 +58,10 @@ private:
     std::shared_ptr<MsgNodeRecv> m_iotSession_recvHeadNode;                                             // 用于接收消息头部的节点（4字节）
     void handleParsedFrame(const std::unique_ptr<FrameBase>& frame);
     void handleRTUReportDataValues(const FrameRTUReportData& dataFrame);
+    short m_port;                                                               // 当前Session绑定的端口
+    std::string m_mainProtocol;                                                 // 大协议类型（固定为CoAP）
+    std::unordered_map<short, std::vector<std::string>> m_coapSubProtoPortMap;  // 端口→CoAP子协议
+    std::vector<std::string> m_currentPortSubProtos;                            // 当前端口支持的CoAP子协议列表
 };
 
 // 逻辑节点：封装会话和接收的消息，用于提交给业务逻辑系统处理

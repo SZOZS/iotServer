@@ -13,73 +13,91 @@ PortProtocolConfig& PortProtocolConfig::getInstance()
     return instance;
 }
 
-// 核心：解析Config.json的port_protocol，生成端口→协议大类映射
+// 返回三级映射：端口→协议大类→子协议
+std::unordered_map<short, std::unordered_map<std::string, std::vector<std::string>>> PortProtocolConfig::getPortToCategoryMap()
+{
+    parsePortProtocolConfig();
+    return _port_to_category_to_items;
+}
+
+// 兼容接口：仅返回端口→协议大类的映射（适配原有调用逻辑）
+std::unordered_map<short, std::string> PortProtocolConfig::getPortToSimpleCategoryMap()
+{
+    parsePortProtocolConfig();
+    std::unordered_map<short, std::string> simple_map;
+
+    for (const auto& port_pair : _port_to_category_to_items) {
+        short port = port_pair.first;
+        const auto& category_map = port_pair.second;
+        if (!category_map.empty()) {
+            // 取第一个大类（每个端口仅归属一个大类）
+            simple_map[port] = category_map.begin()->first;
+        }
+    }
+    return simple_map;
+}
+
 void PortProtocolConfig::parsePortProtocolConfig()
 {
     if (_is_parsed) {
-        return;  // 已解析过，直接返回缓存
+        return;
     }
 
     try {
-        // 1. 从ConfigGlobal读取PortProtocolConfigData（匹配项目实际结构体）
-        // const PortProtocolConfigData& config_data = ConfigGlobal::getInstance().getConfigPortProtocol();
+        // 读取配置数据
         const ConfigGlobal::PortProtocolConfigData_t& config_data = ConfigGlobal::getInstance().getConfigPortProtocol();
+        LOG_INFO_DELAY("[config][port_protocol] 读取成功");
 
-        // 2. 解析CoAP大类（核心：遍历protocolGroups["CoAP"]）
-        auto coap_it = config_data.protocolGroups.find("CoAP");
-        if (coap_it != config_data.protocolGroups.end()) {
-            // 修复PortProtocolItem未声明：用ConfigGlobal::PortProtocolItem_t
-            const std::vector<ConfigGlobal::PortProtocolItem_t>& coap_items = coap_it->second;
-            for (const auto& item : coap_items) {
-                _port_to_category[item.port] = "CoAP";  // 端口→CoAP大类映射
+        // 遍历所有协议大类（正序）
+        for (const auto& protocol_group_pair : config_data.protocolGroups) {
+            const std::string& category_name = protocol_group_pair.first;
+            const std::vector<ConfigGlobal::PortProtocolItem_t>& items = protocol_group_pair.second;
+            LOG_DEBUG_FMT_DELAY("[config][port_protocol][%s](子协议数%zu)", category_name.c_str(), items.size());
+
+            // 遍历当前大类下的所有端口+子协议（不覆盖，追加）
+            for (const auto& item : items) {
+                // 追加子协议到列表，而非覆盖
+                _port_to_category_to_items[item.port][category_name].push_back(item.protocol);
+
+                LOG_DEBUG_FMT_DELAY("  └─ [%d] → [%s] → [%s]（%zu）",
+                                    item.port,
+                                    category_name.c_str(),
+                                    item.protocol.c_str(),
+                                    _port_to_category_to_items[item.port][category_name].size());
             }
         }
 
-        // 3. 解析WebSocket大类
-        auto ws_it = config_data.protocolGroups.find("WebSocket");
-        if (ws_it != config_data.protocolGroups.end()) {
-            const std::vector<ConfigGlobal::PortProtocolItem_t>& ws_items = ws_it->second;
-            for (const auto& item : ws_items) {
-                _port_to_category[item.port] = "WebSocket";
-            }
-        }
-
-        // 4. 扩展：解析MQTT大类（按需添加）
-        auto mqtt_it = config_data.protocolGroups.find("MQTT");
-        if (mqtt_it != config_data.protocolGroups.end()) {
-            const std::vector<ConfigGlobal::PortProtocolItem_t>& mqtt_items = mqtt_it->second;
-            for (const auto& item : mqtt_items) {
-                _port_to_category[item.port] = "MQTT";
-            }
-        }
-
-        // 修复日志格式化：size_t用%zu而非%d
-        LOG_INFO_FMT("解析port_protocol完成，共映射%zu个端口", _port_to_category.size());
+        // 日志输出解析结果
+        LOG_INFO_FMT_DELAY("[config][port_protocol] 读取完成，共映射%zu个端口", _port_to_category_to_items.size());
         _is_parsed = true;
 
     } catch (const std::exception& e) {
-        LOG_ERROR_FMT("解析port_protocol异常：%s", e.what());
-        _is_parsed = true;  // 标记已解析，避免重复报错
+        LOG_ERROR_FMT_DELAY("[config][port_protocol] 读取异常【类型：%s】：%s", typeid(e).name(), e.what());
+        _is_parsed = true;
+    } catch (...) {
+        LOG_ERROR_DELAY("[config][port_protocol] 读取发生未知异常！");
+        _is_parsed = true;
     }
 }
 
-// 对外提供：端口→协议大类名称映射
-std::unordered_map<short, std::string> PortProtocolConfig::getPortToCategoryMap()
-{
-    parsePortProtocolConfig();  // 首次调用时解析配置
-    return _port_to_category;
-}
-
-// 对外提供：协议大类→子协议+端口列表映射（补充完整实现）
-std::unordered_map<ProtocolCategory, std::vector<PortProtocolItem>> PortProtocolConfig::getCategoryToItemsMap()
+// 返回CoAP大类下的多子协议列表
+std::unordered_map<short, std::vector<std::string>> PortProtocolConfig::getCoapSubProtoPortMap()
 {
     parsePortProtocolConfig();
+    std::unordered_map<short, std::vector<std::string>> coap_sub_proto_map;
 
-    // 若需要返回大类→子项列表，可补充如下逻辑（按需启用）
-    // if (_category_to_items.empty()) {
-    //     // 遍历config_data.protocolGroups，填充_category_to_items
-    // }
-    return _category_to_items;
+    for (const auto& port_pair : _port_to_category_to_items) {
+        short port = port_pair.first;
+        const auto& category_item = port_pair.second.find("CoAP");
+
+        // 仅提取CoAP大类的子协议
+        if (category_item != port_pair.second.end()) {
+            coap_sub_proto_map[port] = category_item->second;
+        }
+    }
+
+    LOG_INFO_FMT_DELAY("提取CoAP子协议映射完成，共%zu个端口", coap_sub_proto_map.size());
+    return coap_sub_proto_map;
 }
 
 // 协议大类名称转枚举

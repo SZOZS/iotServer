@@ -27,7 +27,9 @@ public:
     // 获取一个io_context（轮询方式，均衡分配任务）
     boost::asio::io_context& getIOService();
     // 停止所有io_context和工作线程
-    void Stop();
+    void stop();
+    bool isRunning() const;
+    void start();
 
 private:
     // 构造函数（私有）：初始化服务池
@@ -43,7 +45,8 @@ private:
     // 每个io_context对应的工作线程
     std::vector<std::thread> _threads;
     // 轮询索引：记录下一个要分配的io_context位置
-    std::size_t _nextIOService;
+    // std::size_t _nextIOService;
+    std::atomic_size_t _nextIOService;  // 替换原 std::size_t _nextIOService;
 };
 
 #endif  // ASIO_IO_SERVICE_POOL_H
