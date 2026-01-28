@@ -7,6 +7,7 @@
 #include "../frames/FrameAssemblerFactory.h"
 #include "../frames/FrameParserDispatcher.h"
 #include "../frames/IFrameParser.h"
+#include "../frames/hk/yc/YCAssembler.h"
 #include "../frames/hy/LoRaAssembler.h"
 #include "../frames/sd/rtu/RTUAssembler.h"
 #include "../frames/sd/yc/YCAssembler.h"
@@ -254,7 +255,7 @@ void IotSession::handleRead(const boost::system::error_code& error, size_t bytes
                     std::unique_ptr<FrameBase> parsedFrame;
                     std::string errorMsg;
                     // 解析帧
-                    if (FrameParserDispatcher::dispatch(frame, parsedFrame, errorMsg)) {
+                    if (FrameParserDispatcher::dispatch(frame, parsedFrame, errorMsg, m_currentPortSubProtos)) {
                         // 处理解析后的帧（交给业务逻辑）
                         handleParsedFrame(parsedFrame);  // 处理解析后的帧（生成响应）
                     } else {
@@ -381,10 +382,42 @@ void IotSession::handleParsedFrame(const std::unique_ptr<FrameBase>& frame)
                         send(responseStr, feedbackMsgId);
                         LOG_INFO_FMT_DELAY("[%s]反馈帧已发送，长度:%zu字节", getUuid().c_str(), responseFrame.size());
                     } else {
-                        LOG_WARNING_FMT_DELAY("[%s]未匹配的HY_LORA消息ID:%d，无法发送反馈", getUuid().c_str(), frame->msgId);
+                        LOG_WARNING_FMT_DELAY("[%s]未匹配的SD_YC消息ID:%d，无法发送反馈", getUuid().c_str(), frame->msgId);
                     }
                 } catch (const std::exception& e) {
                     LOG_ERROR_FMT_DELAY("[%s]SD_YC反馈帧构建失败:%s", getUuid().c_str(), e.what());
+                }
+            } else {
+                LOG_WARNING_FMT_DELAY("[%s]YCAssembler未生成有效响应帧，消息ID:%d", getUuid().c_str(), frame->msgId);
+            }
+        } else if (frame->protocol == "HK_YC") {
+            frame::hk::yc::YCAssembler assembler;
+            std::vector<uint8_t> responseFrame = assembler.assembleResponse(*frame);
+            if (!responseFrame.empty()) {  // 仅当响应帧有效时发送
+                try {
+                    std::string responseStr(reinterpret_cast<const char*>(responseFrame.data()), responseFrame.size());
+                    std::string responseHex = utils::UtilsHex::bytesToHexString(reinterpret_cast<const char*>(responseFrame.data()), responseFrame.size());
+                    LOG_INFO_FMT_DELAY("[%s]反馈帧内容(hex): %s", getUuid().c_str(), responseHex.c_str());
+                    uint32_t feedbackMsgId = 0;  // 根据消息ID确定反馈消息类型
+                    if (frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_01 || frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_02 ||
+                        frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_03 || frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_04 ||
+                        frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_05 || frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_06 ||
+                        frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_07 || frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_08 ||
+                        frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_21 || frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_24 ||
+                        frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_25 || frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_26 ||
+                        frame->msgId == frame::hk::yc::MsgId::MSG_SEND_DATA_28) {
+                        feedbackMsgId = frame::hk::yc::MsgId::MSG_CONFIRM;
+                    } else {
+                        feedbackMsgId = frame::hk::yc::MsgId::MSG_DENY;
+                    }
+                    if (feedbackMsgId != 0) {
+                        send(responseStr, feedbackMsgId);
+                        LOG_INFO_FMT_DELAY("[%s]反馈帧已发送，长度:%zu字节", getUuid().c_str(), responseFrame.size());
+                    } else {
+                        LOG_WARNING_FMT_DELAY("[%s]未匹配的 HK_YC 消息ID:%d，无法发送反馈", getUuid().c_str(), frame->msgId);
+                    }
+                } catch (const std::exception& e) {
+                    LOG_ERROR_FMT_DELAY("[%s] HK_YC 反馈帧构建失败:%s", getUuid().c_str(), e.what());
                 }
             } else {
                 LOG_WARNING_FMT_DELAY("[%s]YCAssembler未生成有效响应帧，消息ID:%d", getUuid().c_str(), frame->msgId);

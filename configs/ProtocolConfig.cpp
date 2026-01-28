@@ -1,8 +1,11 @@
 #include "ProtocolConfig.h"
 #include "frames/hk/WGConfig.h"    // 包含 HK_WG 协议的配置常量
+#include "frames/hk/YCConfig.h"    // 包含 HK_YC 协议的配置常量
 #include "frames/hy/LoRaConfig.h"  // 包含 HY_LORA 协议的配置常量
 #include "frames/sd/RTUConfig.h"   // 包含 SD_RTU 协议的配置常量
 #include "frames/sd/YCConfig.h"    // 包含 SD_YC 协议的配置常量
+
+using namespace frame::hk::yc;
 
 void ProtocolConfigManager::loadConfigs()
 {
@@ -32,6 +35,15 @@ void ProtocolConfigManager::loadConfigs()
     ycConfig.maxFrameLength = GB_MAX_FRAME_LEN;  // 最大帧长
     ycConfig.checksumType = "XOR";               // 校验方式
     m_configs["SD_YC"] = ycConfig;
+
+    // 加载 HK_YC 协议配置
+    ProtocolConfig hkycConfig;
+    hkycConfig.name = frame::hk::yc::frame_config.protocol_name;          // 协议名
+    hkycConfig.header = frame::hk::yc::frame_config.header;               // 帧头
+    hkycConfig.tail = frame::hk::yc::frame_config.tail;                   // 帧尾
+    hkycConfig.maxFrameLength = frame::hk::yc::frame_config.max_length;   // 最大帧长
+    hkycConfig.checksumType = frame::hk::yc::frame_config.checksum_type;  // 校验方式
+    m_configs[hkycConfig.name] = hkycConfig;
 
     // 加载 HK_WG 协议配置
     ProtocolConfig hkwgConfig;

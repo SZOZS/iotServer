@@ -2,6 +2,7 @@
 #ifndef CONFIG_GLOBAL_H
 #define CONFIG_GLOBAL_H
 
+#include <climits>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

@@ -1,20 +1,18 @@
-#include <condition_variable>
-#include <csignal>
-#include <iostream>
-#include <mutex>
-#include <thread>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/signal_set.hpp>
+#include <chrono>              // 超时控制（C++14 std::chrono::seconds）
+#include <condition_variable>  // 线程同步（C++11/14核心）
+#include <csignal>             // 信号处理（SIGINT/SIGTERM定义）
+#include <cstdio>              // 字符串格式化（替代宏多参数问题）
+#include <mutex>               // 互斥锁（C++14支持std::lock_guard优化）
+#include <stdexcept>           // 标准异常（C++14完善的异常体系）
 
-#include "configs/ConfigGlobal.h"
-#include "configs/ConfigLog.h"
-#include "configs/ProtocolConfig.h"
-#include "frames/FrameParserDispatcher.h"
-#include "frames/sd/rtu/RTUParser.h"
-#include "logics/LogicSystem.h"
-#include "logs/Logger.h"
-#include "networks/AsioIOServicePool.h"
-#include "networks/CServer.h"
-#include "patterns/Singleton.h"
-#include "utils/FileManager.h"
+#include "configs/ConfigGlobal.h"        // 全局配置（端口/线程池大小）
+#include "configs/ProtocolConfig.h"      // IOT协议配置
+#include "logs/Logger.h"                 // 日志系统（单例）
+#include "networks/AsioIOServicePool.h"  // Asio线程池（单例）
+#include "networks/CServer.h"            // TCP服务器核心
+#include "utils/FileManager.h"           // 文件工具（日志目录/路径）
 
 bool bstop = false;
 std::condition_variable cond_quit;
